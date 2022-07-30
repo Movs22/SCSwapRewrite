@@ -1,5 +1,6 @@
 name: SCSwap
 version: '${project.version}'
-main: io.github.arcoda.SCSwap
+main: io.github.arcoda.SCSwap.SCSwap
 api-version: 1.19
-authors: [ Arcoda ]
+authors: [ 'Arcoda' ]
+depend: ['Multiverse-Core']
