@@ -2,6 +2,11 @@ package io.github.arcoda.SCSwap.Listener;
 
 import com.onarandombox.MultiversePortals.event.MVPortalEvent;
 import io.github.arcoda.SCSwap.SCSwap;
+import net.luckperms.api.LuckPerms;
+import net.luckperms.api.LuckPermsProvider;
+import net.luckperms.api.model.data.DataMutateResult;
+import net.luckperms.api.model.user.User;
+import net.luckperms.api.node.Node;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
@@ -11,44 +16,53 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public final class TeleportListener implements Listener {
-    private Player player;
+    private static final LuckPerms perms = SCSwap.getLuckPerms;
     @EventHandler
     public void OnTeleport(MVPortalEvent event) {
-        player = event.getTeleportee();
-        //SCSwap.log.info(player.getName()+" is being teleported to "+event.getDestination().getName()+" from "+event.getSendingPortal().getName());
-        if (event.getSendingPortal().getName().equals(SCSwap.getPlugin.getConfig().getString("Portal.To"))) {
-            //saveInventory("Creative", "Survival");
+        Player player = event.getTeleportee();
+        SCSwap.devLog(player.getName()+" is being teleported to "+event.getDestination().getName()+" from "+event.getSendingPortal().getName());
+        if (event.getSendingPortal().getName().equals(SCSwap.Config.getString("Portal.To"))) {
+            teleportLogic(true, player);
+            player.setBedSpawnLocation(event.getDestination().getLocation(player).add(2, 0 ,0), true);
+        }
+        else if (event.getSendingPortal().getName().equals(SCSwap.Config.getString("Portal.From"))) {
+            teleportLogic(false, player);
+            player.setBedSpawnLocation(event.getDestination().getLocation(player).add(0, 0 ,2), true);
+        }
+    }
+    public static void teleportLogic(boolean toSMP, Player player) {
+        if (toSMP) {
+            saveInventory(player, "Creative", "Survival");
             //Check for op, save and remove if necessary
             if (player.isOp()) {
-                player.addAttachment(SCSwap.getPlugin, "scswap.isop", true);
+                setOpPermission(true, player);
                 player.setOp(false);
             } else {
-                player.addAttachment(SCSwap.getPlugin, "scswap.isop", false);
+                setOpPermission(false, player);
             }
-        }
-        else if (event.getSendingPortal().getName().equals(SCSwap.getPlugin.getConfig().getString("Portal.From"))) {
-            //saveInventory("Survival", "Creative");
+        } else {
+            saveInventory(player, "Survival", "Creative");
             //Give back op if saved earlier
             if (player.hasPermission("scswap.isop")) {
                 player.setOp(true);
             }
             Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(SCSwap.getPlugin, () -> player.setGameMode(GameMode.CREATIVE), 5 * 20);
-
         }
     }
 
-    /* private void saveInventory(String FromMode, String ToMode) {
+    private static void saveInventory(Player player, String FromMode, String ToMode) {
         //Saves the player inventory then clear it
-        SCSwap.getPlugin.getConfig().set("Inventory."+FromMode+"."+player.getName(), player.getInventory().getContents());
+        SCSwap.Config.set("Inventory."+FromMode+"."+player.getName(), player.getInventory().getContents());
         SCSwap.getPlugin.saveConfig();
         player.getInventory().clear();
         //Load inventory from config if it exists
         try {
-            ArrayList<ItemStack> content = (ArrayList<ItemStack>) SCSwap.getPlugin.getConfig().getList("Inventory."+ToMode+"."+player.getName());
-            SCSwap.log.info(content.get(1).toString());
+            ArrayList<ItemStack> content = (ArrayList<ItemStack>) SCSwap.Config.getList("Inventory."+ToMode+"."+player.getName());
+            SCSwap.devLog(content.get(1).toString());
             ItemStack[] items = new ItemStack[content.size()];
             for (int i = 0; i < content.size(); i++) {
                 ItemStack item = content.get(i);
@@ -60,8 +74,13 @@ public final class TeleportListener implements Listener {
             }
             player.getInventory().setContents(items);
         } catch(Exception e) {
-            SCSwap.log.info("No "+ToMode+" inventory found in config for "+player.getName());
-            SCSwap.log.warning(e.getMessage());
+            SCSwap.devLog("No "+ToMode+" inventory found in config for "+player.getName());
+            SCSwap.devLog(e.getMessage());
         }
-    } */
+    }
+    private static void setOpPermission(boolean isOp, Player player) {
+        User user = perms.getPlayerAdapter(Player.class).getUser(player);
+        user.data().add(Node.builder("scswap.isop").value(isOp).build());
+        perms.getUserManager().saveUser(user);
+    }
 }
