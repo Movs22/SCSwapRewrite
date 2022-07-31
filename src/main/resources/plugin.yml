@@ -3,4 +3,5 @@ version: '${project.version}'
 main: io.github.arcoda.SCSwap.SCSwap
 api-version: 1.19
 authors: [ 'Arcoda' ]
-depend: ['Multiverse-Core']
+depend: ['Multiverse-Core','Multiverse-Portals']
+description: 'Plugin for Creative/Survival server hybrid'

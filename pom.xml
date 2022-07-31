@@ -6,7 +6,7 @@
 
     <groupId>SCSwap</groupId>
     <artifactId>SCSwap</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
 
     <name>SCSwap</name>
@@ -68,6 +68,12 @@
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
             <version>1.19.1-R0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.onarandombox.multiverseportals</groupId> <!-- Don't forget to replace this -->
+            <artifactId>Multiverse-Portals</artifactId> <!-- Replace this as well -->
+            <version>4.2.1</version> <!-- This too -->
             <scope>provided</scope>
         </dependency>
         <dependency>
