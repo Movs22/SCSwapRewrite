@@ -1,5 +1,7 @@
 package io.github.arcoda.SCSwap;
 
+import io.github.arcoda.SCSwap.Commands.CMPCommand;
+import io.github.arcoda.SCSwap.Commands.SMPCommand;
 import io.github.arcoda.SCSwap.Listener.TeleportListener;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
@@ -20,12 +22,14 @@ public final class SCSwap extends JavaPlugin {
     public static LuckPerms getLuckPerms;
     @Override
     public void onEnable() {
-        getPlugin = Bukkit.getServer().getPluginManager().getPlugin("SCSwap");
+        getPlugin = this;
         log = getPlugin.getLogger();
         Config = getPlugin.getConfig();
         getLuckPerms = LuckPermsProvider.get();
         loadConfiguration();
         registerListener(new TeleportListener());
+        this.getCommand("smp").setExecutor(new SMPCommand());
+        this.getCommand("cmp").setExecutor(new CMPCommand());
     }
 
     @Override
@@ -46,6 +50,8 @@ public final class SCSwap extends JavaPlugin {
         Config.addDefault("Portal.To", "TO_SMP");
         Config.addDefault("Portal.From", "FROM_SMP");
         Config.addDefault("Debug", false);
+        Config.addDefault("World.Survival", "Survival1");
+        Config.addDefault("World.Creative", "Main1");
         Config.options().copyDefaults(true);
         getPlugin.saveConfig();
     }
