@@ -16,15 +16,15 @@ import java.util.logging.Logger;
 
 public final class SCSwap extends JavaPlugin {
     //private Logger log;
-    public static Plugin getPlugin;
-    public static Logger log;
-    public static FileConfiguration Config;
-    public static LuckPerms getLuckPerms;
+    public Logger log;
+    public FileConfiguration Config;
+    public LuckPerms getLuckPerms;
+    private static SCSwap instance;
     @Override
     public void onEnable() {
-        getPlugin = this;
-        log = getPlugin.getLogger();
-        Config = getPlugin.getConfig();
+        instance = this;
+        log = this.getLogger();
+        Config = this.getConfig();
         getLuckPerms = LuckPermsProvider.get();
         loadConfiguration();
         registerListener(new TeleportListener());
@@ -34,13 +34,16 @@ public final class SCSwap extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        HandlerList.unregisterAll(getPlugin);
+        HandlerList.unregisterAll(this);
     }
 
-    public static void devLog(String text) {
+    public void devLog(String text) {
         if (Config.getBoolean("Debug")) {
             log.info(text);
         }
+    }
+    public static SCSwap getInstance() {
+        return instance;
     }
     private void registerListener(Listener listener) {
         getServer().getPluginManager().registerEvents(listener, this);
@@ -53,6 +56,6 @@ public final class SCSwap extends JavaPlugin {
         Config.addDefault("World.Survival", "Survival1");
         Config.addDefault("World.Creative", "Main1");
         Config.options().copyDefaults(true);
-        getPlugin.saveConfig();
+        this.saveConfig();
     }
 }

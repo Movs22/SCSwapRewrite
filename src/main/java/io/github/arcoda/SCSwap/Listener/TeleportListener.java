@@ -20,16 +20,17 @@ import java.util.Collection;
 import java.util.List;
 
 public final class TeleportListener implements Listener {
-    private static final LuckPerms perms = SCSwap.getLuckPerms;
+    private static SCSwap plugin = SCSwap.getInstance();
+    private static LuckPerms perms = plugin.getLuckPerms;
     @EventHandler
     public void OnTeleport(MVPortalEvent event) {
         Player player = event.getTeleportee();
-        SCSwap.devLog(player.getName()+" is being teleported to "+event.getDestination().getName()+" from "+event.getSendingPortal().getName());
-        if (event.getSendingPortal().getName().equals(SCSwap.Config.getString("Portal.To"))) {
+        plugin.devLog(player.getName()+" is being teleported to "+event.getDestination().getName()+" from "+event.getSendingPortal().getName());
+        if (event.getSendingPortal().getName().equals(plugin.getConfig().getString("Portal.To"))) {
             teleportLogic(true, player);
             player.setBedSpawnLocation(event.getDestination().getLocation(player).add(2, 0 ,0), true);
         }
-        else if (event.getSendingPortal().getName().equals(SCSwap.Config.getString("Portal.From"))) {
+        else if (event.getSendingPortal().getName().equals(plugin.getConfig().getString("Portal.From"))) {
             teleportLogic(false, player);
             player.setBedSpawnLocation(event.getDestination().getLocation(player).add(0, 0 ,2), true);
         }
@@ -50,19 +51,19 @@ public final class TeleportListener implements Listener {
             if (player.hasPermission("scswap.isop")) {
                 player.setOp(true);
             }
-            Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(SCSwap.getPlugin, () -> player.setGameMode(GameMode.CREATIVE), 5 * 20);
+            Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> player.setGameMode(GameMode.CREATIVE), 5 * 20);
         }
     }
 
     private static void saveInventory(Player player, String FromMode, String ToMode) {
         //Saves the player inventory then clear it
-        SCSwap.Config.set("Inventory."+FromMode+"."+player.getName(), player.getInventory().getContents());
-        SCSwap.getPlugin.saveConfig();
+        plugin.getConfig().set("Inventory."+FromMode+"."+player.getName(), player.getInventory().getContents());
+        plugin.saveConfig();
         player.getInventory().clear();
         //Load inventory from config if it exists
         try {
-            ArrayList<ItemStack> content = (ArrayList<ItemStack>) SCSwap.Config.getList("Inventory."+ToMode+"."+player.getName());
-            SCSwap.devLog(content.get(1).toString());
+            ArrayList<ItemStack> content = (ArrayList<ItemStack>) plugin.getConfig().getList("Inventory."+ToMode+"."+player.getName());
+            plugin.devLog(content.get(1).toString());
             ItemStack[] items = new ItemStack[content.size()];
             for (int i = 0; i < content.size(); i++) {
                 ItemStack item = content.get(i);
@@ -74,8 +75,8 @@ public final class TeleportListener implements Listener {
             }
             player.getInventory().setContents(items);
         } catch(Exception e) {
-            SCSwap.devLog("No "+ToMode+" inventory found in config for "+player.getName());
-            SCSwap.devLog(e.getMessage());
+            plugin.devLog("No "+ToMode+" inventory found in config for "+player.getName());
+            plugin.devLog(e.getMessage());
         }
     }
     private static void setOpPermission(boolean isOp, Player player) {
