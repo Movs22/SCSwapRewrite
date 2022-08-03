@@ -25,7 +25,7 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
       - name: build
-        run: mvn build
+        run: mvn clean package
       - name: capture build artifacts
         uses: actions/upload-artifact@v3.1.0
         with:
