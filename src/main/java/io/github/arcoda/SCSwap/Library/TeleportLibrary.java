@@ -19,6 +19,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -37,7 +38,7 @@ public class TeleportLibrary {
             sender.sendMessage("Must be a player to use this command!");
             return true;
         }
-        Player player = ((Player) sender).getPlayer();
+        Player player = ((Player) sender);
         SafeTTeleporter teleport = MV.getSafeTTeleporter();
         if(mode.equals("Survival")) {
             plugin.devLog(plugin.getConfig().getString("Portal.To"));
@@ -50,13 +51,17 @@ public class TeleportLibrary {
         TeleportResult result = teleport.safelyTeleport(player, player, new Location(Bukkit.getWorld(plugin.getConfig().getString("World."+mode)), location.getX(), location.getY(), location.getZ()), false);
         plugin.devLog(result.toString());
         teleportLogic(mode.equals("Survival"), player);
-        //Not working yet
         player.setBedSpawnLocation(portal.getDestination().getLocation(player).add(0, 0 ,2), true);
         return true;
     }
     public void teleportLogic(boolean toSMP, Player player) {
         if (toSMP) {
-            saveInventory(player, "Creative", "Survival");
+            savePlayerData(player, "Creative", "Survival");
+            player.setWalkSpeed(0.1F);
+            player.setFlySpeed(0.1F);
+            for (PotionEffect effect : player.getActivePotionEffects()) {
+                player.removePotionEffect(effect.getType());
+            }
             //Check for op, save and remove if necessary
             if (player.isOp()) {
                 setOpPermission(true, player);
@@ -65,7 +70,7 @@ public class TeleportLibrary {
                 setOpPermission(false, player);
             }
         } else {
-            saveInventory(player, "Survival", "Creative");
+            savePlayerData(player, "Survival", "Creative");
             //Give back op if saved earlier
             if (player.hasPermission("scswap.isop")) {
                 player.setOp(true);
@@ -74,7 +79,7 @@ public class TeleportLibrary {
         }
     }
 
-    private void saveInventory(Player player, String FromMode, String ToMode) {
+    private void savePlayerData(Player player, String FromMode, String ToMode) {
         //Check for empty inventory to prevent a bug
         Boolean emptyInventory = true;
         for(ItemStack item : player.getInventory().getContents())
@@ -89,10 +94,19 @@ public class TeleportLibrary {
             //Saves the player inventory
             inventory.set(player.getUniqueId()+"."+FromMode+".Inventory", InventoryToString.invToString(player.getInventory()));
         }
+        //Save the player armor
         inventory.set(player.getUniqueId()+"."+FromMode+".Armor",ArmorToString.invToString(player.getInventory()));
+
+        //Save the player walkspeed and flyspeed if from creative
+        if (FromMode.equals("Creative")) {
+            inventory.set(player.getUniqueId()+"."+FromMode+".WalkSpeed",(double)player.getWalkSpeed());
+            inventory.set(player.getUniqueId()+"."+FromMode+".FlySpeed",(double)player.getFlySpeed());
+        }
+
         //Saves inventory config and clear player inventory
         try {inventory.save(plugin.inventory);} catch (IOException e) {throw new RuntimeException(e);}
         player.getInventory().clear();
+
         //Load inventory from config if it exists
         String invString = inventory.getString(player.getUniqueId()+"."+ToMode+".Inventory");
         if (invString == null){
@@ -108,6 +122,22 @@ public class TeleportLibrary {
         }
         else {
             ArmorToString.stringToInv(armString, player.getInventory());
+        }
+
+        //Load walkspeed and flyspeed if to creative
+        if(ToMode.equals("Creative")) {
+            Float walkFloat = (float)inventory.getDouble(player.getUniqueId()+"."+ToMode+".WalkSpeed");
+            if (walkFloat == null){
+                plugin.devLog("No "+ToMode+" walkspeed found in config for "+player.getName());
+            } else {
+                player.setWalkSpeed(walkFloat);
+            }
+            Float flyFloat = (float)inventory.getDouble(player.getUniqueId()+"."+ToMode+".FlySpeed");
+            if (flyFloat == null){
+                plugin.devLog("No "+ToMode+" flyspeed found in config for "+player.getName());
+            } else {
+                player.setFlySpeed(flyFloat);
+            }
         }
     }
     private void setOpPermission(boolean isOp, Player player) {

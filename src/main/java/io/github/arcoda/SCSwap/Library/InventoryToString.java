@@ -10,6 +10,10 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.potion.Potion;
+import org.bukkit.potion.PotionData;
+import org.bukkit.potion.PotionType;
 
 public class InventoryToString {
 
@@ -53,6 +57,10 @@ public class InventoryToString {
                                     }
                                 }
                             }
+                        }
+                        if (item.getItemMeta() instanceof PotionMeta) {
+                            PotionData potion = ((PotionMeta) item.getItemMeta()).getBasePotionData();
+                            serInv += "@p" + sep + potion.getType() + sep + (potion.isExtended() ? 1 : 0) + sep + (potion.isUpgraded() ? 1 : 0);
                         }
                     }
                     serInv += blockSep;
@@ -98,6 +106,10 @@ public class InventoryToString {
                         itemMeta.addEnchant(Enchantment.values()[Integer.valueOf(spe[0])], Integer.valueOf(spe[1]), true);
                     }
                     item.setItemMeta(itemMeta);
+                }else if (attribute[0].equals("p")) {
+                    PotionMeta potionMeta = (PotionMeta) item.getItemMeta();
+                    potionMeta.setBasePotionData(new PotionData(PotionType.valueOf(attribute[1]), attribute[2].equals("1"), attribute[3].equals("1")));
+                    item.setItemMeta(potionMeta);
                 }
             }
             ser.setItem(where, item);
