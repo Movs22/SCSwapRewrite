@@ -37,9 +37,18 @@ public class TeleportLibrary {
         Player player = ((Player) sender);
         SafeTTeleporter teleport = MV.getSafeTTeleporter();
         if(mode.equals("Survival")) {
-            plugin.devLog(plugin.getConfig().getString("Portal.To"));
+            if (player.getWorld().equals(Bukkit.getWorld(plugin.getConfig().getString("World.Survival")))) {
+                plugin.devLog(player.getName()+" is already in SMP, no need to teleport");
+                player.sendMessage(plugin.prefix+"§4You are already in the SMP ._.");
+                return true;
+            }
             portal = MVPortals.getPortalManager().getPortal(plugin.getConfig().getString("Portal.To"));
         } else if (mode.equals("Creative")) {
+            if (player.getWorld().equals(Bukkit.getWorld(plugin.getConfig().getString("World.Creative")))) {
+                plugin.devLog(player.getName()+" is already in CMP, no need to teleport");
+                player.sendMessage(plugin.prefix+"§4You are already in the CMP ._.");
+                return true;
+            }
             portal = MVPortals.getPortalManager().getPortal(plugin.getConfig().getString("Portal.From"));
         }
         Location location = portal.getDestination().getLocation(player).add(0, 0 ,2);
@@ -52,6 +61,7 @@ public class TeleportLibrary {
     }
     public void teleportLogic(boolean toSMP, Player player) {
         if (toSMP) {
+
             savePlayerData(player, "Creative", "Survival");
             player.setWalkSpeed(0.1F);
             player.setFlySpeed(0.1F);
