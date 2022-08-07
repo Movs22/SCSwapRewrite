@@ -13,8 +13,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -22,9 +20,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 public class TeleportLibrary {
     private SCSwap plugin = SCSwap.getInstance();
@@ -62,6 +58,7 @@ public class TeleportLibrary {
             for (PotionEffect effect : player.getActivePotionEffects()) {
                 player.removePotionEffect(effect.getType());
             }
+            plugin.nametagAPI.setSuffix(player, "[SMP]");
             //Check for op, save and remove if necessary
             if (player.isOp()) {
                 setOpPermission(true, player);
@@ -71,11 +68,17 @@ public class TeleportLibrary {
             }
         } else {
             savePlayerData(player, "Survival", "Creative");
-            //Give back op if saved earlier
-            if (player.hasPermission("scswap.isop")) {
-                player.setOp(true);
-            }
-            Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> player.setGameMode(GameMode.CREATIVE), 3 * 20);
+
+            Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+                if (player.getWorld().equals(Bukkit.getWorld(plugin.getConfig().getString("World.Creative")))) {
+                    player.setGameMode(GameMode.CREATIVE);
+                    //Give back op if saved earlier
+                    if (player.hasPermission("scswap.isop")) {
+                        player.setOp(true);
+                    }
+                    plugin.nametagAPI.setSuffix(player, "");
+                }
+            }, 3 * 20);
         }
     }
 

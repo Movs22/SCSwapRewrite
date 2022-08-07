@@ -1,10 +1,13 @@
 package io.github.arcoda.SCSwap;
 
+import com.nametagedit.plugin.NametagEdit;
+import com.nametagedit.plugin.api.NametagAPI;
 import io.github.arcoda.SCSwap.Commands.CMPCommand;
 import io.github.arcoda.SCSwap.Commands.SCSWapCommand;
 import io.github.arcoda.SCSwap.Commands.SMPCommand;
 import io.github.arcoda.SCSwap.Commands.Tab.SCSwapTabComplete;
 import io.github.arcoda.SCSwap.Library.TeleportLibrary;
+import io.github.arcoda.SCSwap.Listener.JoinListener;
 import io.github.arcoda.SCSwap.Listener.TeleportListener;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
@@ -27,6 +30,7 @@ public final class SCSwap extends JavaPlugin {
     public File inventory;
     private static SCSwap instance;
     public String prefix = "[SCSwap] ";
+    public NametagAPI nametagAPI;
     @Override
     public void onEnable() {
         instance = this;
@@ -34,6 +38,7 @@ public final class SCSwap extends JavaPlugin {
         Config = this.getConfig();
         getLuckPerms = LuckPermsProvider.get();
         getTeleportLib = new TeleportLibrary();
+        nametagAPI = (NametagAPI) JavaPlugin.getPlugin(NametagEdit.class).getApi();
         loadConfiguration();
         inventory = new File("./plugins/SCSwap/inventory.yml");
         try {
@@ -43,6 +48,7 @@ public final class SCSwap extends JavaPlugin {
         }
         getTeleportLib.setInventory(YamlConfiguration.loadConfiguration(inventory));
         registerListener(new TeleportListener());
+        registerListener(new JoinListener());
         this.getCommand("smp").setExecutor(new SMPCommand());
         this.getCommand("cmp").setExecutor(new CMPCommand());
         this.getCommand("scswap").setExecutor(new SCSWapCommand());

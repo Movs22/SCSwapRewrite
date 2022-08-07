@@ -2,21 +2,13 @@
 package io.github.arcoda.SCSwap.Library;
 
 import io.github.arcoda.SCSwap.SCSwap;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Item;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.yaml.snakeyaml.util.ArrayUtils;
-
-import java.sql.Array;
 import java.util.ArrayList;
 import java.util.Map.Entry;
-
-import static org.yaml.snakeyaml.util.ArrayUtils.*;
 
 public class ArmorToString {
 

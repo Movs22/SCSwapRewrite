@@ -2,22 +2,9 @@ package io.github.arcoda.SCSwap.Listener;
 
 import com.onarandombox.MultiversePortals.event.MVPortalEvent;
 import io.github.arcoda.SCSwap.SCSwap;
-import net.luckperms.api.LuckPerms;
-import net.luckperms.api.LuckPermsProvider;
-import net.luckperms.api.model.data.DataMutateResult;
-import net.luckperms.api.model.user.User;
-import net.luckperms.api.node.Node;
-import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 public final class TeleportListener implements Listener {
     private static SCSwap plugin = SCSwap.getInstance();
