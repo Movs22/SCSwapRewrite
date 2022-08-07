@@ -5,8 +5,11 @@ api-version: 1.19
 authors: [Arcoda]
 depend: [Multiverse-Core, Multiverse-Portals, LuckPerms]
 description: 'Plugin for Creative/Survival server hybrid'
+website: 'https://github.com/Arcoda/SCSwap'
 commands:
   smp:
     description: Teleport player to the SMP part of the server
   cmp:
     description: Teleport player to the CMP part of the server
+  scswap:
+    description: Control SCSwap
