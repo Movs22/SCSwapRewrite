@@ -11,6 +11,7 @@ import io.github.arcoda.SCSwap.Listener.JoinListener;
 import io.github.arcoda.SCSwap.Listener.TeleportListener;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
+import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.HandlerList;
@@ -19,6 +20,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 public final class SCSwap extends JavaPlugin {
@@ -31,6 +34,7 @@ public final class SCSwap extends JavaPlugin {
     private static SCSwap instance;
     public String prefix = "[SCSwap] ";
     public NametagAPI nametagAPI;
+    public List<World> smpWorlds;
     @Override
     public void onEnable() {
         instance = this;
@@ -76,9 +80,22 @@ public final class SCSwap extends JavaPlugin {
         Config.addDefault("Portal.To", "TO_SMP");
         Config.addDefault("Portal.From", "FROM_SMP");
         Config.addDefault("Debug", false);
-        Config.addDefault("World.Survival", "Survival1");
+        List<String> defaultSmp = new ArrayList<>();
+        defaultSmp.add("Survival1");
+        defaultSmp.add("Survival1_nether");
+        defaultSmp.add("Survival1_the_end");
+        Config.addDefault("World.Survival", defaultSmp);
         Config.addDefault("World.Creative", "Main1");
         Config.options().copyDefaults(true);
         this.saveConfig();
+        List<String> smpList = (List<String>) Config.getList("World.Survival");
+        if (smpList != null) {
+            smpWorlds = new ArrayList<>();
+            for (String world : smpList) {
+                smpWorlds.add(getServer().getWorld(world));
+            }
+        } else {
+            log.warning("Please configure the World.Survival list in the config.yml");
+        }
     }
 }

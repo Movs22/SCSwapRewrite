@@ -37,23 +37,33 @@ public class TeleportLibrary {
         Player player = ((Player) sender);
         SafeTTeleporter teleport = MV.getSafeTTeleporter();
         if(mode.equals("Survival")) {
-            if (player.getWorld().equals(Bukkit.getWorld(plugin.getConfig().getString("World.Survival")))) {
+            if (plugin.smpWorlds.contains(player.getWorld())) {
                 plugin.devLog(player.getName()+" is already in SMP, no need to teleport");
                 player.sendMessage(plugin.prefix+"§4You are already in the SMP ._.");
                 return true;
             }
             portal = MVPortals.getPortalManager().getPortal(plugin.getConfig().getString("Portal.To"));
         } else if (mode.equals("Creative")) {
-            if (player.getWorld().equals(Bukkit.getWorld(plugin.getConfig().getString("World.Creative")))) {
+            if (!(plugin.smpWorlds.contains(player.getWorld()))) {
                 plugin.devLog(player.getName()+" is already in CMP, no need to teleport");
                 player.sendMessage(plugin.prefix+"§4You are already in the CMP ._.");
                 return true;
             }
             portal = MVPortals.getPortalManager().getPortal(plugin.getConfig().getString("Portal.From"));
         }
-        Location location = portal.getDestination().getLocation(player).add(0, 0 ,2);
+        String invLocation = inventory.getString(player.getUniqueId() +"."+mode+".Location");
+        Location location;
+        if(invLocation == null) {
+            location = portal.getDestination().getLocation(player).add(0, 0 ,2);
+        } else {
+            location = LocationToString.toLocation(invLocation);
+        }
+        //Save the player location
+        inventory.set(player.getUniqueId()+"."+(mode.equals("Creative") ? "Survival" : "Creative")+".Location", LocationToString.toString(player.getLocation()));
+
         //Teleports the player and logs the result
-        TeleportResult result = teleport.safelyTeleport(player, player, new Location(Bukkit.getWorld(plugin.getConfig().getString("World."+mode)), location.getX(), location.getY(), location.getZ()), false);
+        plugin.devLog(player.getName()+" is going to "+location.toString());
+        TeleportResult result = teleport.safelyTeleport(player, player, location, false);
         plugin.devLog(result.toString());
         teleportLogic(mode.equals("Survival"), player);
         player.setBedSpawnLocation(portal.getDestination().getLocation(player).add(0, 0 ,2), true);
@@ -71,10 +81,16 @@ public class TeleportLibrary {
             plugin.nametagAPI.setSuffix(player, "[SMP]");
             //Check for op, save and remove if necessary
             if (player.isOp()) {
-                setOpPermission(true, player);
+                setPermission(player, "scswap.isop", true);
                 player.setOp(false);
             } else {
-                setOpPermission(false, player);
+                setPermission(player, "scswap.isop", false);
+            }
+            //Check for flight permission, save and remove if necessary
+            if (player.hasPermission("group.allow-fly")) {
+                setPermission(player, "scswap.flight", true);
+            } else {
+                setPermission(player, "scswap.flight", false);
             }
         } else {
             savePlayerData(player, "Survival", "Creative");
@@ -85,6 +101,10 @@ public class TeleportLibrary {
                     //Give back op if saved earlier
                     if (player.hasPermission("scswap.isop")) {
                         player.setOp(true);
+                    }
+                    //Give back flight if saved earlier
+                    if (player.hasPermission("scswap.flight")) {
+                        setPermission(player, "group.allow-fly", true);
                     }
                     plugin.nametagAPI.setSuffix(player, "");
                 }
@@ -110,11 +130,20 @@ public class TeleportLibrary {
         //Save the player armor
         inventory.set(player.getUniqueId()+"."+FromMode+".Armor",ArmorToString.invToString(player.getInventory()));
 
+        //Save the item in off hand
+        inventory.set(player.getUniqueId()+"."+FromMode+".OffHand", ItemToString.getString(player.getInventory().getItemInOffHand()));
+
         //Save the player walkspeed and flyspeed if from creative
         if (FromMode.equals("Creative")) {
             inventory.set(player.getUniqueId()+"."+FromMode+".WalkSpeed",(double)player.getWalkSpeed());
             inventory.set(player.getUniqueId()+"."+FromMode+".FlySpeed",(double)player.getFlySpeed());
         }
+
+        //Saves the player health
+        inventory.set(player.getUniqueId()+"."+FromMode+".Health",player.getHealth());
+
+        //Saves the player hunger
+        inventory.set(player.getUniqueId()+"."+FromMode+".Hunger",player.getFoodLevel());
 
         //Saves inventory config and clear player inventory
         try {inventory.save(plugin.inventory);} catch (IOException e) {throw new RuntimeException(e);}
@@ -137,6 +166,15 @@ public class TeleportLibrary {
             ArmorToString.stringToInv(armString, player.getInventory());
         }
 
+        //Load item in off hand from config if it exists
+        String offHandString = inventory.getString(player.getUniqueId()+"."+ToMode+".OffHand");
+        if (offHandString == null){
+            plugin.devLog("No "+ToMode+" off hand found in config for "+player.getName());
+        }
+        else {
+            player.getInventory().setItemInOffHand(ItemToString.getItem(offHandString));
+        }
+
         //Load walkspeed and flyspeed if to creative
         if(ToMode.equals("Creative")) {
             Float walkFloat = (float)inventory.getDouble(player.getUniqueId()+"."+ToMode+".WalkSpeed");
@@ -152,10 +190,26 @@ public class TeleportLibrary {
                 player.setFlySpeed(flyFloat);
             }
         }
+
+        //Load health
+        Double health = inventory.getDouble(player.getUniqueId()+"."+ToMode+".Health");
+        if (health == null){
+            plugin.devLog("No "+ToMode+" health found in config for "+player.getName());
+        } else {
+            player.setHealth(health);
+        }
+
+        //Load hunger
+        Integer hunger = inventory.getInt(player.getUniqueId()+"."+ToMode+".Hunger");
+        if (hunger == null){
+            plugin.devLog("No "+ToMode+" hunger found in config for "+player.getName());
+        } else {
+            player.setFoodLevel(hunger);
+        }
     }
-    private void setOpPermission(boolean isOp, Player player) {
+    private void setPermission(Player player, String key, boolean value) {
         User user = perms.getPlayerAdapter(Player.class).getUser(player);
-        user.data().add(Node.builder("scswap.isop").value(isOp).build());
+        user.data().add(Node.builder(key).value(value).build());
         perms.getUserManager().saveUser(user);
     }
     public void setInventory(YamlConfiguration file) {

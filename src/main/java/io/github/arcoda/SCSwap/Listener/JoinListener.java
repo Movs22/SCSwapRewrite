@@ -11,7 +11,7 @@ public class JoinListener implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         plugin.devLog(event.getPlayer().getName()+" joining on "+event.getPlayer().getWorld().getName());
-        if (event.getPlayer().getWorld().equals(Bukkit.getWorld(plugin.getConfig().getString("World.Survival")))) {
+        if (plugin.smpWorlds.contains(event.getPlayer().getWorld())) {
             plugin.devLog(event.getPlayer().getName()+" joined inside SMP, giving suffix");
             plugin.nametagAPI.setSuffix(event.getPlayer(), "[SMP]");
         }
