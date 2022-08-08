@@ -178,13 +178,13 @@ public class TeleportLibrary {
         //Load walkspeed and flyspeed if to creative
         if(ToMode.equals("Creative")) {
             Float walkFloat = (float)inventory.getDouble(player.getUniqueId()+"."+ToMode+".WalkSpeed");
-            if (walkFloat == null){
+            if (walkFloat == null || walkFloat == 0) {
                 plugin.devLog("No "+ToMode+" walkspeed found in config for "+player.getName());
             } else {
                 player.setWalkSpeed(walkFloat);
             }
             Float flyFloat = (float)inventory.getDouble(player.getUniqueId()+"."+ToMode+".FlySpeed");
-            if (flyFloat == null){
+            if (flyFloat == null || flyFloat == 0) {
                 plugin.devLog("No "+ToMode+" flyspeed found in config for "+player.getName());
             } else {
                 player.setFlySpeed(flyFloat);
@@ -193,7 +193,7 @@ public class TeleportLibrary {
 
         //Load health
         Double health = inventory.getDouble(player.getUniqueId()+"."+ToMode+".Health");
-        if (health == null){
+        if (health == null || health == 0) {
             plugin.devLog("No "+ToMode+" health found in config for "+player.getName());
         } else {
             player.setHealth(health);
@@ -201,7 +201,7 @@ public class TeleportLibrary {
 
         //Load hunger
         Integer hunger = inventory.getInt(player.getUniqueId()+"."+ToMode+".Hunger");
-        if (hunger == null){
+        if (hunger == null || hunger == 0) {
             plugin.devLog("No "+ToMode+" hunger found in config for "+player.getName());
         } else {
             player.setFoodLevel(hunger);
@@ -214,5 +214,8 @@ public class TeleportLibrary {
     }
     public void setInventory(YamlConfiguration file) {
         inventory = file;
+    }
+    public YamlConfiguration getInventory() {
+        return inventory;
     }
 }
