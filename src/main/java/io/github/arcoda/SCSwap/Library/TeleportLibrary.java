@@ -63,8 +63,8 @@ public class TeleportLibrary {
         if (toSMP) {
 
             savePlayerData(player, "Creative", "Survival");
-            player.setWalkSpeed(0.1F);
-            player.setFlySpeed(0.1F);
+            player.setWalkSpeed(0.2F);
+            player.setFlySpeed(0.2F);
             for (PotionEffect effect : player.getActivePotionEffects()) {
                 player.removePotionEffect(effect.getType());
             }
