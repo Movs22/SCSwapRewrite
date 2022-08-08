@@ -89,6 +89,7 @@ public class TeleportLibrary {
             //Check for flight permission, save and remove if necessary
             if (player.hasPermission("group.allow-fly")) {
                 setPermission(player, "scswap.flight", true);
+                setPermission(player, "group.allow-fly", false);
             } else {
                 setPermission(player, "scswap.flight", false);
             }
