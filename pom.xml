@@ -6,7 +6,7 @@
 
     <groupId>SCSwap</groupId>
     <artifactId>SCSwap</artifactId>
-    <version>1.2.1-FIX</version>
+    <version>1.2.2</version>
     <packaging>jar</packaging>
 
     <name>SCSwap</name>

@@ -16,6 +16,7 @@ public class SCSwapTabComplete implements TabCompleter {
         if (args.length == 1) {
             ArrayList<String> baseList = new ArrayList<String>();
             baseList.add("reload");
+            baseList.add("about");
             return baseList;
         }
         return(new ArrayList<>());

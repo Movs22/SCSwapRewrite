@@ -30,7 +30,7 @@ public final class SCSwap extends JavaPlugin {
     public FileConfiguration Config;
     public LuckPerms getLuckPerms;
     public TeleportLibrary getTeleportLib;
-    public File inventory;
+    public File inventoryFile;
     private static SCSwap instance;
     public String prefix = "[SCSwap] ";
     public NametagAPI nametagAPI;
@@ -44,13 +44,13 @@ public final class SCSwap extends JavaPlugin {
         getTeleportLib = new TeleportLibrary();
         nametagAPI = (NametagAPI) JavaPlugin.getPlugin(NametagEdit.class).getApi();
         loadConfiguration();
-        inventory = new File("./plugins/SCSwap/inventory.yml");
+        inventoryFile = new File("./plugins/SCSwap/inventory.yml");
         try {
-            inventory.createNewFile();
+            inventoryFile.createNewFile();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        getTeleportLib.setInventory(YamlConfiguration.loadConfiguration(inventory));
+        getTeleportLib.setInventory(YamlConfiguration.loadConfiguration(inventoryFile));
         registerListener(new TeleportListener());
         registerListener(new JoinListener());
         this.getCommand("smp").setExecutor(new SMPCommand());

@@ -147,7 +147,7 @@ public class TeleportLibrary {
         inventory.set(player.getUniqueId()+"."+FromMode+".Hunger",player.getFoodLevel());
 
         //Saves inventory config and clear player inventory
-        try {inventory.save(plugin.inventory);} catch (IOException e) {throw new RuntimeException(e);}
+        try {inventory.save(plugin.inventoryFile);} catch (IOException e) {throw new RuntimeException(e);}
         player.getInventory().clear();
 
         //Load inventory from config if it exists
