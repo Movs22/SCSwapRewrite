@@ -1,4 +1,4 @@
-package io.github.arcoda.SCSwap.Library;
+package com.github.arcoda.SCSwap.Library;
 
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;

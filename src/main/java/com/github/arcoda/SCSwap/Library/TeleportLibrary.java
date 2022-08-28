@@ -1,11 +1,11 @@
-package io.github.arcoda.SCSwap.Library;
+package com.github.arcoda.SCSwap.Library;
 
 import com.onarandombox.MultiverseCore.MultiverseCore;
 import com.onarandombox.MultiverseCore.api.SafeTTeleporter;
 import com.onarandombox.MultiverseCore.enums.TeleportResult;
 import com.onarandombox.MultiversePortals.MVPortal;
 import com.onarandombox.MultiversePortals.MultiversePortals;
-import io.github.arcoda.SCSwap.SCSwap;
+import com.github.arcoda.SCSwap.SCSwap;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.model.user.User;
 import net.luckperms.api.node.Node;

@@ -1,7 +1,6 @@
-package io.github.arcoda.SCSwap.Listener;
+package com.github.arcoda.SCSwap.Listener;
 
-import io.github.arcoda.SCSwap.SCSwap;
-import org.bukkit.Bukkit;
+import com.github.arcoda.SCSwap.SCSwap;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;

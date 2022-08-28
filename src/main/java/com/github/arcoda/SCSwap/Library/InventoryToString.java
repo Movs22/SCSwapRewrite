@@ -1,5 +1,5 @@
 //Modified version of https://bukkit.org/threads/serialize-inventory-to-string-remake.429071/
-package io.github.arcoda.SCSwap.Library;
+package com.github.arcoda.SCSwap.Library;
 
 import java.util.ArrayList;
 import java.util.Map.Entry;

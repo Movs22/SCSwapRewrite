@@ -1,14 +1,14 @@
-package io.github.arcoda.SCSwap;
+package com.github.arcoda.SCSwap;
 
+import com.github.arcoda.SCSwap.Commands.SMPCommand;
+import com.github.arcoda.SCSwap.Library.TeleportLibrary;
 import com.nametagedit.plugin.NametagEdit;
 import com.nametagedit.plugin.api.NametagAPI;
-import io.github.arcoda.SCSwap.Commands.CMPCommand;
-import io.github.arcoda.SCSwap.Commands.SCSWapCommand;
-import io.github.arcoda.SCSwap.Commands.SMPCommand;
-import io.github.arcoda.SCSwap.Commands.Tab.SCSwapTabComplete;
-import io.github.arcoda.SCSwap.Library.TeleportLibrary;
-import io.github.arcoda.SCSwap.Listener.JoinListener;
-import io.github.arcoda.SCSwap.Listener.TeleportListener;
+import com.github.arcoda.SCSwap.Commands.CMPCommand;
+import com.github.arcoda.SCSwap.Commands.SCSWapCommand;
+import com.github.arcoda.SCSwap.Commands.Tab.SCSwapTabComplete;
+import com.github.arcoda.SCSwap.Listener.JoinListener;
+import com.github.arcoda.SCSwap.Listener.TeleportListener;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
 import org.bukkit.World;

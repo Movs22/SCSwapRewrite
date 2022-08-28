@@ -1,4 +1,4 @@
-package io.github.arcoda.SCSwap.Commands.Tab;
+package com.github.arcoda.SCSwap.Commands.Tab;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;

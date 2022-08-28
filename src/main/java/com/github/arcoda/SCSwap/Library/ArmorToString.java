@@ -1,7 +1,7 @@
 //Modified version of https://bukkit.org/threads/serialize-inventory-to-string-remake.429071/
-package io.github.arcoda.SCSwap.Library;
+package com.github.arcoda.SCSwap.Library;
 
-import io.github.arcoda.SCSwap.SCSwap;
+import com.github.arcoda.SCSwap.SCSwap;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;

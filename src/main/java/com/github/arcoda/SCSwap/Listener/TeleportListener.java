@@ -1,8 +1,8 @@
-package io.github.arcoda.SCSwap.Listener;
+package com.github.arcoda.SCSwap.Listener;
 
+import com.github.arcoda.SCSwap.Library.LocationToString;
+import com.github.arcoda.SCSwap.SCSwap;
 import com.onarandombox.MultiversePortals.event.MVPortalEvent;
-import io.github.arcoda.SCSwap.Library.LocationToString;
-import io.github.arcoda.SCSwap.SCSwap;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
