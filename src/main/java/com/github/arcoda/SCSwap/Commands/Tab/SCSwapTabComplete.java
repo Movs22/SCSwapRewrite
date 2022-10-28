@@ -13,10 +13,17 @@ public class SCSwapTabComplete implements TabCompleter {
     @Nullable
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+        ArrayList<String> baseList = new ArrayList<String>();
         if (args.length == 1) {
-            ArrayList<String> baseList = new ArrayList<String>();
             baseList.add("reload");
             baseList.add("about");
+            baseList.add("block");
+            return baseList;
+        }
+        if (args[0] == "block") {
+            baseList.add("add");
+            baseList.add("list");
+            baseList.add("remove");
             return baseList;
         }
         return(new ArrayList<>());
