@@ -120,7 +120,7 @@ public class TeleportLibrary {
             }
         }
         if (emptyInventory) {
-            inventory.set(player.getUniqueId()+"."+FromMode, "4†e†");
+            inventory.set(player.getUniqueId()+"."+FromMode+".Inventory", "4†e†");
         } else {
             //Saves the player inventory
             inventory.set(player.getUniqueId()+"."+FromMode+".Inventory", InventoryToString.invToString(player.getInventory()));
@@ -143,9 +143,13 @@ public class TeleportLibrary {
         //Saves the player hunger
         inventory.set(player.getUniqueId()+"."+FromMode+".Hunger",player.getFoodLevel());
 
-        //Saves inventory config and clear player inventory
+        //Save ender chest
+        inventory.set(player.getUniqueId()+"."+FromMode+".EnderChest", InventoryToString.invToString(player.getEnderChest()));
+
+        //Saves inventory config and clear player inventory&ender chest
         try {inventory.save(plugin.inventoryFile);} catch (IOException e) {throw new RuntimeException(e);}
         player.getInventory().clear();
+        player.getEnderChest().clear();
 
         //Load inventory from config if it exists
         String invString = inventory.getString(player.getUniqueId()+"."+ToMode+".Inventory");
@@ -155,6 +159,16 @@ public class TeleportLibrary {
         else {
             player.getInventory().setContents(InventoryToString.stringToInv(invString).getContents());
         }
+
+        //Load ender chest from config if it exists
+        String enderString = inventory.getString(player.getUniqueId()+"."+ToMode+".EnderChest");
+        if (enderString == null){
+            plugin.devLog("No "+ToMode+" ender chest found in config for "+player.getName());
+        }
+        else {
+            player.getEnderChest().setContents(InventoryToString.stringToInv(enderString).getContents());
+        }
+
         //Load armor from config if it exists
         String armString = inventory.getString(player.getUniqueId()+"."+ToMode+".Armor");
         if (armString == null){
