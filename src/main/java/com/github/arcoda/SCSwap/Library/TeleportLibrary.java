@@ -10,6 +10,7 @@ import net.luckperms.api.LuckPerms;
 import net.luckperms.api.model.user.User;
 import net.luckperms.api.node.Node;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
@@ -30,10 +31,6 @@ public class TeleportLibrary {
     private LuckPerms perms = plugin.getLuckPerms;
     private YamlConfiguration inventory;
     public boolean teleportTo(CommandSender sender,@NotNull String mode) {
-        if(!(sender instanceof Player)) {
-            sender.sendMessage("Must be a player to use this command!");
-            return true;
-        }
         Player player = ((Player) sender);
         SafeTTeleporter teleport = MV.getSafeTTeleporter();
         if(mode.equals("Survival")) {

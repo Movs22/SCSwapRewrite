@@ -1,5 +1,6 @@
 package com.github.arcoda.SCSwap.Commands.Tab;
 
+import com.github.arcoda.SCSwap.SCSwap;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
@@ -20,8 +21,9 @@ public class SCSwapTabComplete implements TabCompleter {
             baseList.add("block");
             return baseList;
         }
-        if (args[0] == "block") {
+        if (args[0].equals("block") && args.length == 2) {
             baseList.add("add");
+            baseList.add("add-uuid");
             baseList.add("list");
             baseList.add("remove");
             return baseList;

@@ -81,11 +81,10 @@ public final class SCSwap extends JavaPlugin {
         Config.addDefault("Portal.From", "FROM_SMP");
         Config.addDefault("Debug", false);
         List<String> defaultSmp = new ArrayList<>();
-        List<String> defaultBlocked = new ArrayList<>();
         defaultSmp.add("Survival1");
         defaultSmp.add("Survival1_nether");
         defaultSmp.add("Survival1_the_end");
-        Config.addDefault("blocked", defaultBlocked);
+        Config.addDefault("Blocked", new ArrayList<>());
         Config.addDefault("World.Survival", defaultSmp);
         Config.addDefault("World.Creative", "Main1");
         Config.options().copyDefaults(true);
