@@ -2,14 +2,16 @@ name: SCSwap
 version: '${project.version}'
 main: com.github.arcoda.SCSwap.SCSwap
 api-version: 1.19
-authors: [Arcoda]
+authors: [Arcoda, Movies22]
 depend: [Multiverse-Core, Multiverse-Portals, LuckPerms, NametagEdit]
 description: 'Plugin for Creative/Survival server hybrid'
 website: 'https://github.com/Arcoda/SCSwap'
 commands:
   smp:
     description: Teleport player to the SMP part of the server
+    permission: scswap.smp
   cmp:
     description: Teleport player to the CMP part of the server
+    permission: scswap.cmp
   scswap:
     description: Control SCSwap

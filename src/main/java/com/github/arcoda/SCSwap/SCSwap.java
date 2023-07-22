@@ -8,15 +8,23 @@ import com.github.arcoda.SCSwap.Commands.CMPCommand;
 import com.github.arcoda.SCSwap.Commands.SCSWapCommand;
 import com.github.arcoda.SCSwap.Commands.Tab.SCSwapTabComplete;
 import com.github.arcoda.SCSwap.Listener.JoinListener;
+import com.github.arcoda.SCSwap.Listener.LeaveListener;
 import com.github.arcoda.SCSwap.Listener.TeleportListener;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
+import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
+
+import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitScheduler;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,29 +38,65 @@ public final class SCSwap extends JavaPlugin {
     public FileConfiguration Config;
     public LuckPerms getLuckPerms;
     public TeleportLibrary getTeleportLib;
-    public File inventoryFile;
+    public File smpInvFile;
+    public File cmpInvFile;
     private static SCSwap instance;
     public String prefix = "[SCSwap] ";
     public NametagAPI nametagAPI;
     public List<World> smpWorlds;
+    public List<Player> staff = new ArrayList<Player>();
+    
+    public Boolean enableStaff(Player p) {
+    	staff.add(p);
+    	return true;
+    }
+    
+    public Boolean disableStaff(Player p) {
+    	staff.remove(p);
+    	return true;
+    }
+    
+    public Boolean isStaff(Player p) {
+    	return staff.contains(p);
+    }
+    
+    public BukkitScheduler updateTask = Bukkit.getScheduler();
     @Override
     public void onEnable() {
         instance = this;
+        updateTask.runTaskTimer(this, new Runnable() {
+			@Override
+			public void run() {
+	        	staff.forEach(p -> {
+	        		p.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§6You are on SMP staff mode."));
+	        	});
+			}
+        }, 0L, 20L);
         log = this.getLogger();
         Config = this.getConfig();
         getLuckPerms = LuckPermsProvider.get();
         getTeleportLib = new TeleportLibrary();
-        nametagAPI = (NametagAPI) JavaPlugin.getPlugin(NametagEdit.class).getApi();
+        JavaPlugin.getPlugin(NametagEdit.class);
+		nametagAPI = (NametagAPI) NametagEdit.getApi();
         loadConfiguration();
-        inventoryFile = new File("./plugins/SCSwap/inventory.yml");
+        smpInvFile = new File("./plugins/SCSwap/survival.yml");
+        cmpInvFile = new File("./plugins/SCSwap/creative.yml");
         try {
-            inventoryFile.createNewFile();
+        	smpInvFile.createNewFile();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        getTeleportLib.setInventory(YamlConfiguration.loadConfiguration(inventoryFile));
-        registerListener(new TeleportListener());
+        try {
+        	cmpInvFile.createNewFile();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        getTeleportLib.setInventory(YamlConfiguration.loadConfiguration(smpInvFile), "Survival");
+        getTeleportLib.setInventory(YamlConfiguration.loadConfiguration(cmpInvFile), "Creative");
+        /*registerListener(new TeleportListener());*/
         registerListener(new JoinListener());
+        registerListener(new LeaveListener());
+        registerListener(new TeleportListener());
         this.getCommand("smp").setExecutor(new SMPCommand());
         this.getCommand("cmp").setExecutor(new CMPCommand());
         this.getCommand("scswap").setExecutor(new SCSWapCommand());
@@ -75,8 +119,10 @@ public final class SCSwap extends JavaPlugin {
     private void registerListener(Listener listener) {
         getServer().getPluginManager().registerEvents(listener, this);
     }
+    
 
-    private void loadConfiguration() {
+    @SuppressWarnings("unchecked")
+	private void loadConfiguration() {
         Config.addDefault("Portal.To", "TO_SMP");
         Config.addDefault("Portal.From", "FROM_SMP");
         Config.addDefault("Debug", false);
@@ -84,9 +130,12 @@ public final class SCSwap extends JavaPlugin {
         defaultSmp.add("Survival1");
         defaultSmp.add("Survival1_nether");
         defaultSmp.add("Survival1_the_end");
-        Config.addDefault("Blocked", new ArrayList<>());
         Config.addDefault("World.Survival", defaultSmp);
+        Config.addDefault("World.Survival.Gamemode", "Survival");
+        Config.addDefault("World.Survival.Permission", "scswap.smp");   //this permission will be given to players who leave this world (and go to the CMP)
         Config.addDefault("World.Creative", "Main1");
+        Config.addDefault("World.Creative.Gamemode", "Creative");
+        Config.addDefault("World.Creative.Permission", "scswap.cmp");   //this permission will be given to players who leave this world (and go to the SMP)
         Config.options().copyDefaults(true);
         this.saveConfig();
         List<String> smpList = (List<String>) Config.getList("World.Survival");

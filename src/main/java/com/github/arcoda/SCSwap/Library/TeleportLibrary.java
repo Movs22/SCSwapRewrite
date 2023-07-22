@@ -1,233 +1,377 @@
 package com.github.arcoda.SCSwap.Library;
 
-import com.onarandombox.MultiverseCore.MultiverseCore;
-import com.onarandombox.MultiverseCore.api.SafeTTeleporter;
-import com.onarandombox.MultiverseCore.enums.TeleportResult;
-import com.onarandombox.MultiversePortals.MVPortal;
-import com.onarandombox.MultiversePortals.MultiversePortals;
 import com.github.arcoda.SCSwap.SCSwap;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.model.user.User;
 import net.luckperms.api.node.Node;
+import net.md_5.bungee.api.ChatColor;
+
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
+import org.bukkit.GameRule;
 import org.bukkit.Location;
+import org.bukkit.Sound;
+import org.bukkit.advancement.Advancement;
+import org.bukkit.advancement.AdvancementProgress;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
 public class TeleportLibrary {
-    private SCSwap plugin = SCSwap.getInstance();
-    private MultiverseCore MV = JavaPlugin.getPlugin(MultiverseCore.class);
-    private MultiversePortals MVPortals = JavaPlugin.getPlugin(MultiversePortals.class);
-    private MVPortal portal;
-    private LuckPerms perms = plugin.getLuckPerms;
-    private YamlConfiguration inventory;
-    public boolean teleportTo(CommandSender sender,@NotNull String mode) {
-        Player player = ((Player) sender);
-        SafeTTeleporter teleport = MV.getSafeTTeleporter();
-        if(mode.equals("Survival")) {
-            if (plugin.smpWorlds.contains(player.getWorld())) {
-                plugin.devLog(player.getName()+" is already in SMP, no need to teleport");
-                player.sendMessage(plugin.prefix+"§4You are already in the SMP ._.");
-                return true;
-            }
-            portal = MVPortals.getPortalManager().getPortal(plugin.getConfig().getString("Portal.To"));
-        } else if (mode.equals("Creative")) {
-            if (!(plugin.smpWorlds.contains(player.getWorld()))) {
-                plugin.devLog(player.getName()+" is already in CMP, no need to teleport");
-                player.sendMessage(plugin.prefix+"§4You are already in the CMP ._.");
-                return true;
-            }
-            portal = MVPortals.getPortalManager().getPortal(plugin.getConfig().getString("Portal.From"));
-        }
-        String invLocation = inventory.getString(player.getUniqueId() +"."+mode+".Location");
-        Location location;
-        if(invLocation == null) {
-            location = portal.getDestination().getLocation(player).add(0, 0 ,2);
-        } else {
-            location = LocationToString.toLocation(invLocation);
-        }
-        //Save the player location
-        inventory.set(player.getUniqueId()+"."+(mode.equals("Creative") ? "Survival" : "Creative")+".Location", LocationToString.toString(player.getLocation()));
+	private SCSwap plugin = SCSwap.getInstance();
+	// private MultiverseCore MV = JavaPlugin.getPlugin(MultiverseCore.class);
+	// private MultiversePortals MVPortals =
+	// JavaPlugin.getPlugin(MultiversePortals.class);
+	// private MVPortal portal;
+	private LuckPerms perms = plugin.getLuckPerms;
+	private YamlConfiguration survival;
+	private YamlConfiguration creative;
 
-        //Teleports the player and logs the result
-        plugin.devLog(player.getName()+" is going to "+location.toString());
-        TeleportResult result = teleport.safelyTeleport(player, player, location, false);
-        plugin.devLog(result.toString());
-        teleportLogic(mode.equals("Survival"), player);
-        player.setBedSpawnLocation(portal.getDestination().getLocation(player).add(0, 0 ,2), true);
-        return true;
-    }
-    public void teleportLogic(boolean toSMP, Player player) {
-        if (toSMP) {
+	public boolean teleportTo(CommandSender sender, @NotNull String mode) throws IOException {
+		if (!(sender instanceof Player))
+			return false;
+		Player player = ((Player) sender);
+		player = player.getPlayer();
+		User user = perms.getPlayerAdapter(Player.class).getUser(player);
+		if (mode == "Survival") {
+			if (player.isInsideVehicle()) {
+				sender.sendMessage(ChatColor.RED + "Failed to teleport to the SMP. Are you riding an entity?");
+				return true;
+			}
+			plugin.nametagAPI.setPrefix(player, "&2[SMP] &a");
+			if(player.hasPermission("scswap.manager")) {
+				plugin.nametagAPI.setPrefix(player, "&2[SMP] &9");
+			}
+			if(player.hasPermission("scswap.mayor")) {
+				plugin.nametagAPI.setPrefix(player, "&2[SMP] &3");
+			}
+			// CMP Effects
+			String effects = EffectLibrary.potionsToString(player.getActivePotionEffects());
+			if (effects != null) {
+				creative.set(player.getUniqueId() + ".Effects", effects);
+			}
 
-            savePlayerData(player, "Creative", "Survival");
-            player.setWalkSpeed(0.2F);
-            player.setFlySpeed(0.2F);
-            for (PotionEffect effect : player.getActivePotionEffects()) {
-                player.removePotionEffect(effect.getType());
-            }
-            plugin.nametagAPI.setSuffix(player, "[SMP]");
-            //Check for op, save and remove if necessary
-            if (player.isOp()) {
-                setPermission(player, "scswap.isop", true);
-                player.setOp(false);
-            } else {
-                setPermission(player, "scswap.isop", false);
-            }
-            //Check for flight permission, save and remove if necessary
-            if (player.hasPermission("group.allow-fly")) {
-                setPermission(player, "scswap.flight", true);
-                setPermission(player, "group.allow-fly", false);
-            } else {
-                setPermission(player, "scswap.flight", false);
-            }
-        } else {
-            savePlayerData(player, "Survival", "Creative");
+			// CMP Inventory
+			String inv = InventoryLibrary.toBase64(player.getInventory());
+			if (inv != null) {
+				creative.set(player.getUniqueId() + ".Inventory", inv);
+			}
+			String einv = InventoryLibrary.toBase64(player.getEnderChest());
+			if (einv != null) {
+				creative.set(player.getUniqueId() + ".EnderChest", einv);
+			}
+			
+			String oinv = InventoryLibrary.offHandtoBase64(player.getInventory().getItemInOffHand());
+			if (oinv != null) {
+				creative.set(player.getUniqueId() + ".Offhand", oinv);
+			}
 
-            Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
-                if (player.getWorld().equals(Bukkit.getWorld(plugin.getConfig().getString("World.Creative")))) {
-                    player.setGameMode(GameMode.CREATIVE);
-                    //Give back op if saved earlier
-                    if (player.hasPermission("scswap.isop")) {
-                        player.setOp(true);
-                    }
-                    //Give back flight if saved earlier
-                    if (player.hasPermission("scswap.flight")) {
-                        setPermission(player, "group.allow-fly", true);
-                    }
-                    plugin.nametagAPI.setSuffix(player, "");
-                }
-            }, 3 * 20);
-        }
-    }
+			// CMP XP
+			creative.set(player.getUniqueId() + ".Experience", "" + player.getExp());
+			// CMP Health/Hunger
+			creative.set(player.getUniqueId() + ".Health", player.getHealth());
+			creative.set(player.getUniqueId() + ".Hunger", player.getFoodLevel());
+			// Username
+			creative.set(player.getUniqueId() + ".User", sender.getName());
+			// CMP Location
+			creative.set(player.getUniqueId() + ".Location", LocationLibrary.toString(player.getLocation()));
+			// CMP Bed/Respawn Location
+			if (player.getBedSpawnLocation() != null) {
+				creative.set(player.getUniqueId() + ".Spawn", LocationLibrary.toString(player.getBedSpawnLocation()));
+			} else {
+				creative.set(player.getUniqueId() + ".Spawn", " ");
+			}
+			Boolean a = false;
+			// SMP Location/Spawn
+			if (survival.getString(player.getUniqueId() + ".Location") == null) {
+				player.teleport(LocationLibrary.toLocation("Survival1•175•65•13"));
+				a = true;
+			} else {
+				String loc = survival.getString(player.getUniqueId() + ".Location");
+				if (loc.startsWith("Survival")) {
+					player.teleport(LocationLibrary.toLocation(loc));
+				} else {
+					player.teleport(LocationLibrary.toLocation("Survival1•175•65•13"));
+				}
+			}
+			if (survival.getString(player.getUniqueId() + ".Spawn") == null) {
+				player.setBedSpawnLocation(LocationLibrary.toLocation("Survival1•175•65•13"));
+			} else {
+				String loc = survival.getString(player.getUniqueId() + ".Spawn");
+				if (loc.startsWith("Survival")) {
+					player.setBedSpawnLocation(LocationLibrary.toLocation(loc));
+				} else {
+					player.setBedSpawnLocation(LocationLibrary.toLocation("Survival1•175•65•13"));
+				}
+			}
 
-    private void savePlayerData(Player player, String FromMode, String ToMode) {
-        //Check for empty inventory to prevent a bug
-        Boolean emptyInventory = true;
-        for(ItemStack item : player.getInventory().getContents())
-        {
-            if(item != null) {
-                emptyInventory = false;
-            }
-        }
-        if (emptyInventory) {
-            inventory.set(player.getUniqueId()+"."+FromMode+".Inventory", "4†e†");
-        } else {
-            //Saves the player inventory
-            inventory.set(player.getUniqueId()+"."+FromMode+".Inventory", InventoryToString.invToString(player.getInventory()));
-        }
-        //Save the player armor
-        inventory.set(player.getUniqueId()+"."+FromMode+".Armor",ArmorToString.invToString(player.getInventory()));
+			
+			for (PotionEffect p : player.getActivePotionEffects()) {
+				player.removePotionEffect(p.getType());
+			}
 
-        //Save the item in off hand
-        inventory.set(player.getUniqueId()+"."+FromMode+".OffHand", ItemToString.getString(player.getInventory().getItemInOffHand()));
+			// CMP Fly/Walk Speeds
+			creative.set(player.getUniqueId() + ".FlySpeed", player.getFlySpeed());
+			creative.set(player.getUniqueId() + ".WalkSpeed", player.getWalkSpeed());
+			// Luck Perms
+			// 1) Green Nick/Default group override
+			user.data().add(Node.builder("group.survival").value(true).build());
+			// 2) Operator permissions
+			if (player.hasPermission("group.operators")) {
+				user.data().add(Node.builder("scswap.operators").value(true).build());
+				user.data().remove(Node.builder("group.operators").build());
+			}
+			// 3) [Unused] /fly permissions
+			if (player.hasPermission("group.allow-fly")) {
+				user.data().add(Node.builder("scswap.allow-fly").value(true).build());
+				user.data().remove(Node.builder("group.allow-fly").build());
+			}
+			// 4) Worldedit permissions
+			if (player.hasPermission("group.worldedit-full")) {
+				user.data().add(Node.builder("scswap.worldedit-full").value(true).build());
+				user.data().remove(Node.builder("group.worldedit-full").build());
+			}
+			// Updates /smp and /cmp perms
+			user.data().add(Node.builder("scswap.cmp").value(true).build());
+			user.data().add(Node.builder("scswap.smp").value(false).build());
+			// Saves Luck Perms
+			perms.getUserManager().saveUser(user);
 
-        //Save the player walkspeed and flyspeed if from creative
-        if (FromMode.equals("Creative")) {
-            inventory.set(player.getUniqueId()+"."+FromMode+".WalkSpeed",(double)player.getWalkSpeed());
-            inventory.set(player.getUniqueId()+"."+FromMode+".FlySpeed",(double)player.getFlySpeed());
-        }
+			// Disables gamemode, flight and changes gamemode to survival
+			player.setOp(false);
+			player.setGameMode(GameMode.SURVIVAL);
+			player.setAllowFlight(false);
+			player.setFlying(false);
+			// Clears inventory
+			player.getInventory().clear();
+			// SMP Health/Hunger
+			if (survival.getInt(player.getUniqueId() + ".Health") > 0.1) {
+				player.setHealth(survival.getInt(player.getUniqueId() + ".Health"));
+			} else {
+				player.setHealth(20.0f);
+			}
+			if (survival.getInt(player.getUniqueId() + ".Hunger") > 0.1) {
+				player.setFoodLevel(survival.getInt(player.getUniqueId() + ".Hunger"));
+			} else {
+				player.setFoodLevel(20);
+			}
+			// SMP Experience
+			if (survival.getString(player.getUniqueId() + ".Experience") != null) {
+				player.setExp(Float.parseFloat(survival.getString(player.getUniqueId() + ".Experience")));
+			} else {
+				player.setExp(0.0f);
+			}
 
-        //Saves the player health
-        inventory.set(player.getUniqueId()+"."+FromMode+".Health",player.getHealth());
+			// SMP Walk/FLight speeds
+			player.setFlySpeed(0.2f);
+			player.setWalkSpeed(0.2f);
+			// SMP Inventory/EnderChest
+			if (survival.getString(player.getUniqueId() + ".Inventory") != null) {
+				InventoryLibrary.loadInv(survival.getString(player.getUniqueId() + ".Inventory"), player);
+			}
+			if (a) {
+				player.playSound(player, Sound.BLOCK_NOTE_BLOCK_BELL, 1, 1);
+				ItemStack book = InventoryLibrary.getDefaultBook();
+				player.getInventory().addItem(book);
+				PotionEffect e = new PotionEffect(PotionEffectType.SATURATION, 6000, 255);
+				player.addPotionEffect(e);
+				player.sendMessage(ChatColor.GREEN + "Welcome to the SMP. You've received " + ChatColor.DARK_GREEN
+						+ "Saturation" + ChatColor.GREEN + " for " + ChatColor.DARK_GREEN + "5 minutes" + ChatColor.GREEN
+						+ ". After those 5 minutes run out, you'll need to get food by yourself." + ChatColor.GOLD
+						+ " Enjoy the SMP!");
+			}
+			if (survival.getString(player.getUniqueId() + ".EnderChest") != null) {
+				InventoryLibrary.loadEnderChest(survival.getString(player.getUniqueId() + ".EnderChest"), player);
+			}
+			
+			if (survival.getString(player.getUniqueId() + ".Offhand") != null) {
+				InventoryLibrary.loadOffHand(survival.getString(player.getUniqueId() + ".Offhand"), player);
+			}
+			// SMP Potions
+			if (survival.getString(player.getUniqueId() + ".Effects") != null) {
+				EffectLibrary.loadPotions(survival.getString(player.getUniqueId() + ".Effects"), player);
+			}
+			try {
+				creative.save("./plugins/SCSwap/creative.yml");
+				survival.save("./plugins/SCSwap/survival.yml");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			return true;
+		} else if (mode == "Creative") {
+			if (player.isInsideVehicle()) {
+				sender.sendMessage(ChatColor.RED + "Failed to teleport to the SMP. Are you riding an entity?");
+				return true;
+			}
+			plugin.nametagAPI.clearNametag(player);
+			// SMP Effects
+			String effects = EffectLibrary.potionsToString(player.getActivePotionEffects());
+			if (effects != null) {
+				survival.set(player.getUniqueId() + ".Effects", effects);
+			}
+			
+			// SMP Inventory
+			String inv = InventoryLibrary.toBase64(player.getInventory());
+			if (inv != null) {
+				survival.set(player.getUniqueId() + ".Inventory", inv);
+			}
+			String einv = InventoryLibrary.toBase64(player.getEnderChest());
+			if (einv != null) {
+				survival.set(player.getUniqueId() + ".EnderChest", einv);
+			}
+			
+			String oinv = InventoryLibrary.offHandtoBase64(player.getInventory().getItemInOffHand());
+			if (oinv != null) {
+				survival.set(player.getUniqueId() + ".Offhand", oinv);
+			}
 
-        //Saves the player hunger
-        inventory.set(player.getUniqueId()+"."+FromMode+".Hunger",player.getFoodLevel());
+			// SMP XP
+			survival.set(player.getUniqueId() + ".Experience","" + player.getExp());
+			// SMP Health/Hunger
+			survival.set(player.getUniqueId() + ".Health", player.getHealth());
+			survival.set(player.getUniqueId() + ".Hunger", player.getFoodLevel());
+			// Username
+			survival.set(player.getUniqueId() + ".User", sender.getName());
+			// SMP Location
+			survival.set(player.getUniqueId() + ".Location", LocationLibrary.toString(player.getLocation()));
+			// SMP Bed/Respawn Location
+			if (player.getBedSpawnLocation() != null) {
+				survival.set(player.getUniqueId() + ".Spawn", LocationLibrary.toString(player.getBedSpawnLocation()));
+			} else {
+				survival.set(player.getUniqueId() + ".Spawn", "Survival1•175•65•13");
+			}
+			// CMP Location/Spawn
+			if (creative.getString(player.getUniqueId() + ".Location") == null) {
+				player.teleport(LocationLibrary.toLocation("Main1•133•67•351"));
+			} else {
+				String loc = creative.getString(player.getUniqueId() + ".Location");
+				if (loc.startsWith("Main1")) {
+					player.teleport(LocationLibrary.toLocation(loc));
+				} else {
+					player.teleport(LocationLibrary.toLocation("Main1•133•67•351"));
+				}
+			}
+			if (creative.getString(player.getUniqueId() + ".Spawn") == null) {
+				player.setBedSpawnLocation(LocationLibrary.toLocation("Main1•133•67•351"));
+			} else {
+				String loc = creative.getString(player.getUniqueId() + ".Spawn");
+				if (loc.startsWith("Main1")) {
+					player.setBedSpawnLocation(LocationLibrary.toLocation(loc));
+				} else {
+					player.setBedSpawnLocation(LocationLibrary.toLocation("Main1•133•67•351"));
+				}
+			}
 
-        //Save ender chest
-        inventory.set(player.getUniqueId()+"."+FromMode+".EnderChest", InventoryToString.invToString(player.getEnderChest()));
+			for (PotionEffect p : player.getActivePotionEffects()) {
+				player.removePotionEffect(p.getType());
+			}
+			
+			// Luck Perms
+			// 1) Green Nick/Default group override
+			user.data().remove(Node.builder("group.survival").build());
+			// 2) Operator permissions
+			if (player.hasPermission("scswap.operators")) {
+				player.setOp(true);
+				user.data().add(Node.builder("group.operators").value(true).build());
+				user.data().remove(Node.builder("scswap.operators").build());
+			}
+			// 3) [Unused] /fly permissions
+			if (player.hasPermission("scswap.allow-fly")) {
+				user.data().remove(Node.builder("scswap.allow-fly").build());
+			}
+			// 4) Worldedit permissions
+			if (player.hasPermission("scswap.worldedit-full")) {
+				user.data().add(Node.builder("group.worldedit-full").value(true).build());
+				user.data().remove(Node.builder("scswap.worldedit-full").build());
+			}
+			// Updates /smp and /cmp perms
+			user.data().add(Node.builder("scswap.cmp").value(false).build());
+			user.data().add(Node.builder("scswap.smp").value(true).build());
+			// Saves Luck Perms
+			perms.getUserManager().saveUser(user);
 
-        //Saves inventory config and clear player inventory&ender chest
-        try {inventory.save(plugin.inventoryFile);} catch (IOException e) {throw new RuntimeException(e);}
-        player.getInventory().clear();
-        player.getEnderChest().clear();
+			// Reenables flight and changes gamemode to creative
+			player.setGameMode(GameMode.CREATIVE);
+			player.setAllowFlight(true);
+			player.setFlying(true);
+			// Clears inventory
+			player.getInventory().clear();
+			// CMP Health/Hunger
+			if (creative.getInt(player.getUniqueId() + ".Health") > 0.1) {
+				player.setHealth(creative.getInt(player.getUniqueId() + ".Health"));
+			} else {
+				player.setHealth(20.0f);
+			}
+			if (creative.getInt(player.getUniqueId() + ".Hunger") > 0.1) {
+				player.setFoodLevel(creative.getInt(player.getUniqueId() + ".Hunger"));
+			} else {
+				player.setFoodLevel(10);
+			}
+			// CMP Experience
+			if (creative.getString(player.getUniqueId() + ".Experience") != null) {
+				player.setExp(Float.parseFloat(creative.getString(player.getUniqueId() + ".Experience")));
+			} else {
+				player.setExp(0.0f);
+			}
+			if (creative.getString(player.getUniqueId() + ".Offhand") != null) {
+				InventoryLibrary.loadOffHand(creative.getString(player.getUniqueId() + ".Offhand"), player);
+			}
 
-        //Load inventory from config if it exists
-        String invString = inventory.getString(player.getUniqueId()+"."+ToMode+".Inventory");
-        if (invString == null){
-            plugin.devLog("No "+ToMode+" inventory found in config for "+player.getName());
-        }
-        else {
-            player.getInventory().setContents(InventoryToString.stringToInv(invString).getContents());
-        }
+			// CMP Walk/FLight speeds
+			if (creative.getInt(player.getUniqueId() + ".WalkSpeed") > 0.2) {
+				player.setWalkSpeed(creative.getInt(player.getUniqueId() + ".WalkSpeed"));
+			} else {
+				player.setWalkSpeed(0.2f);
+			}
+			if (creative.getInt(player.getUniqueId() + ".FlySpeed") > 0.2) {
+				player.setWalkSpeed(creative.getInt(player.getUniqueId() + ".FlySpeed"));
+			} else {
+				player.setWalkSpeed(0.2f);
+			}
+			// CMP Inventory/EnderChest
+			if (creative.getString(player.getUniqueId() + ".Inventory") != null) {
+				InventoryLibrary.loadInv(creative.getString(player.getUniqueId() + ".Inventory"), player);
+			}
+			if (creative.getString(player.getUniqueId() + ".EnderChest") != null) {
+				InventoryLibrary.loadEnderChest(creative.getString(player.getUniqueId() + ".EnderChest"), player);
+			}
+			// CMP Potions
+			if (creative.getString(player.getUniqueId() + ".Effects") != null) {
+				EffectLibrary.loadPotions(creative.getString(player.getUniqueId() + ".Effects"), player);
+			}
+			try {
+				creative.save("./plugins/SCSwap/creative.yml");
+				survival.save("./plugins/SCSwap/survival.yml");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	public void setInventory(YamlConfiguration i, String s) {
+		if (s == "Survival") {
+			survival = i;
+		} else if (s == "Creative") {
+			creative = i;
+		}
+	}
 
-        //Load ender chest from config if it exists
-        String enderString = inventory.getString(player.getUniqueId()+"."+ToMode+".EnderChest");
-        if (enderString == null){
-            plugin.devLog("No "+ToMode+" ender chest found in config for "+player.getName());
-        }
-        else {
-            player.getEnderChest().setContents(InventoryToString.stringToInv(enderString).getContents());
-        }
+	public YamlConfiguration getInventory(String s) {
+		if (s == "Survival") {
+			return survival;
+		} else if (s == "Creative") {
+			return creative;
+		}
+		return null;
+	}
 
-        //Load armor from config if it exists
-        String armString = inventory.getString(player.getUniqueId()+"."+ToMode+".Armor");
-        if (armString == null){
-            plugin.devLog("No "+ToMode+" armor found in config for "+player.getName());
-        }
-        else {
-            ArmorToString.stringToInv(armString, player.getInventory());
-        }
-
-        //Load item in off hand from config if it exists
-        String offHandString = inventory.getString(player.getUniqueId()+"."+ToMode+".OffHand");
-        if (offHandString == null){
-            plugin.devLog("No "+ToMode+" off hand found in config for "+player.getName());
-        }
-        else {
-            player.getInventory().setItemInOffHand(ItemToString.getItem(offHandString));
-        }
-
-        //Load walkspeed and flyspeed if to creative
-        if(ToMode.equals("Creative")) {
-            Float walkFloat = (float)inventory.getDouble(player.getUniqueId()+"."+ToMode+".WalkSpeed");
-            if (walkFloat == null || walkFloat == 0) {
-                plugin.devLog("No "+ToMode+" walkspeed found in config for "+player.getName());
-            } else {
-                player.setWalkSpeed(walkFloat);
-            }
-            Float flyFloat = (float)inventory.getDouble(player.getUniqueId()+"."+ToMode+".FlySpeed");
-            if (flyFloat == null || flyFloat == 0) {
-                plugin.devLog("No "+ToMode+" flyspeed found in config for "+player.getName());
-            } else {
-                player.setFlySpeed(flyFloat);
-            }
-        }
-
-        //Load health
-        Double health = inventory.getDouble(player.getUniqueId()+"."+ToMode+".Health");
-        if (health == null || health == 0) {
-            plugin.devLog("No "+ToMode+" health found in config for "+player.getName());
-        } else {
-            player.setHealth(health);
-        }
-
-        //Load hunger
-        Integer hunger = inventory.getInt(player.getUniqueId()+"."+ToMode+".Hunger");
-        if (hunger == null || hunger == 0) {
-            plugin.devLog("No "+ToMode+" hunger found in config for "+player.getName());
-        } else {
-            player.setFoodLevel(hunger);
-        }
-    }
-    private void setPermission(Player player, String key, boolean value) {
-        User user = perms.getPlayerAdapter(Player.class).getUser(player);
-        user.data().add(Node.builder(key).value(value).build());
-        perms.getUserManager().saveUser(user);
-    }
-    public void setInventory(YamlConfiguration file) {
-        inventory = file;
-    }
-    public YamlConfiguration getInventory() {
-        return inventory;
-    }
 }

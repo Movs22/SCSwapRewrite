@@ -1,6 +1,5 @@
 package com.github.arcoda.SCSwap.Commands.Tab;
 
-import com.github.arcoda.SCSwap.SCSwap;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
@@ -18,15 +17,16 @@ public class SCSwapTabComplete implements TabCompleter {
         if (args.length == 1) {
             baseList.add("reload");
             baseList.add("about");
-            baseList.add("block");
+            if(sender.isOp()) {
+            	baseList.add("staffmode");
+            	baseList.add("reset");
+            }
             return baseList;
         }
-        if (args[0].equals("block") && args.length == 2) {
-            baseList.add("add");
-            baseList.add("add-uuid");
-            baseList.add("list");
-            baseList.add("remove");
-            return baseList;
+        if(args.length == 2 && sender.isOp()) {
+        	sender.getServer().getOnlinePlayers().forEach(p -> {
+        		baseList.add(p.getName());
+        	});
         }
         return(new ArrayList<>());
     }

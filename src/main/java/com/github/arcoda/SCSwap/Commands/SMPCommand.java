@@ -3,6 +3,7 @@ import com.github.arcoda.SCSwap.SCSwap;
 
 import org.bukkit.ChatColor;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.bukkit.command.Command;
@@ -19,11 +20,16 @@ public class SMPCommand implements CommandExecutor {
             sender.sendMessage("Must be a player to use this command!");
             return true;
         }
-        if(SCSwap.getInstance().getConfig().getList("Blocked").contains(((Player)sender).getUniqueId().toString())) {
-            sender.sendMessage(ChatColor.RED + "You have been banned from the SMP. Open a ticket if you wish to appeal your ban.");
-            return true;
-        }  else {
-		    return SCSwap.getInstance().getTeleportLib.teleportTo(sender, "Survival");
+        Player p = (Player) sender;
+        if(SCSwap.getInstance().isStaff(p)) {
+        	sender.sendMessage(ChatColor.RED + "You can't run this command while in SMP Staff Mode.");
+        	return true;
+        }
+		try {
+			return SCSwap.getInstance().getTeleportLib.teleportTo(sender, "Survival");
+		} catch (IOException e) {
+			e.printStackTrace();
+			return true;
         }
     }
 }
