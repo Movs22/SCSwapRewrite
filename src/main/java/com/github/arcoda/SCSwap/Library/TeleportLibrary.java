@@ -44,13 +44,11 @@ public class TeleportLibrary {
 				sender.sendMessage(ChatColor.RED + "Failed to teleport to the SMP. Are you riding an entity?");
 				return true;
 			}
-			plugin.nametagAPI.setPrefix(player, "&2[SMP] &a");
-			if(player.hasPermission("scswap.manager")) {
-				plugin.nametagAPI.setPrefix(player, "&2[SMP] &9");
+			if(player.getHealth() < 11.0 && player.getFoodLevel() < 5) {
+				sender.sendMessage(ChatColor.RED + "Please regenerate until you've got half of your health before leaving the SMP.");
+				return true;
 			}
-			if(player.hasPermission("scswap.mayor")) {
-				plugin.nametagAPI.setPrefix(player, "&2[SMP] &3");
-			}
+			
 			// CMP Effects
 			String effects = EffectLibrary.potionsToString(player.getActivePotionEffects());
 			if (effects != null) {
@@ -82,32 +80,32 @@ public class TeleportLibrary {
 			// CMP Location
 			creative.set(player.getUniqueId() + ".Location", LocationLibrary.toString(player.getLocation()));
 			// CMP Bed/Respawn Location
-			if (player.getBedSpawnLocation() != null) {
-				creative.set(player.getUniqueId() + ".Spawn", LocationLibrary.toString(player.getBedSpawnLocation()));
+			if (player.getRespawnLocation() != null) {
+				creative.set(player.getUniqueId() + ".Spawn", LocationLibrary.toString(player.getRespawnLocation()));
 			} else {
 				creative.set(player.getUniqueId() + ".Spawn", " ");
 			}
 			Boolean a = false;
 			// SMP Location/Spawn
 			if (survival.getString(player.getUniqueId() + ".Location") == null) {
-				player.teleport(LocationLibrary.toLocation("Survival1•175•65•13"));
+				player.teleport(LocationLibrary.toLocation("Survival1•137•72•-36"));
 				a = true;
 			} else {
 				String loc = survival.getString(player.getUniqueId() + ".Location");
 				if (loc.startsWith("Survival")) {
 					player.teleport(LocationLibrary.toLocation(loc));
 				} else {
-					player.teleport(LocationLibrary.toLocation("Survival1•175•65•13"));
+					player.teleport(LocationLibrary.toLocation("Survival1•137•72•-36"));
 				}
 			}
 			if (survival.getString(player.getUniqueId() + ".Spawn") == null) {
-				player.setBedSpawnLocation(LocationLibrary.toLocation("Survival1•175•65•13"));
+				player.setRespawnLocation(LocationLibrary.toLocation("Survival1•137•72•-36"), true);
 			} else {
 				String loc = survival.getString(player.getUniqueId() + ".Spawn");
 				if (loc.startsWith("Survival")) {
-					player.setBedSpawnLocation(LocationLibrary.toLocation(loc));
+					player.setRespawnLocation(LocationLibrary.toLocation(loc), true);
 				} else {
-					player.setBedSpawnLocation(LocationLibrary.toLocation("Survival1•175•65•13"));
+					player.setRespawnLocation(LocationLibrary.toLocation("Survival1•137•72•-36"), true);
 				}
 			}
 
@@ -150,11 +148,19 @@ public class TeleportLibrary {
 			player.setFlying(false);
 			// Clears inventory
 			player.getInventory().clear();
+			player.getEnderChest().clear();
+			player.setExp(0.0f);
+			player.setLevel(0);
+			player.setAbsorptionAmount(0.0f);
 			// SMP Health/Hunger
 			if (survival.getInt(player.getUniqueId() + ".Health") > 0.1) {
 				player.setHealth(survival.getInt(player.getUniqueId() + ".Health"));
 			} else {
 				player.setHealth(20.0f);
+			}
+			
+			if (survival.getInt(player.getUniqueId() + ".Absorption") > 0.1) {
+				player.setAbsorptionAmount(survival.getInt(player.getUniqueId() + ".Absorption"));
 			}
 			if (survival.getInt(player.getUniqueId() + ".Hunger") > 0.1) {
 				player.setFoodLevel(survival.getInt(player.getUniqueId() + ".Hunger"));
@@ -167,6 +173,11 @@ public class TeleportLibrary {
 			} else {
 				player.setExp(0.0f);
 			}
+			if (survival.getString(player.getUniqueId() + ".Level") != null) {
+				player.setLevel(Integer.parseInt(survival.getString(player.getUniqueId() + ".Level")));
+			} else {
+				player.setLevel(0);
+			}
 
 			// SMP Walk/FLight speeds
 			player.setFlySpeed(0.2f);
@@ -177,8 +188,8 @@ public class TeleportLibrary {
 			}
 			if (a) {
 				player.playSound(player, Sound.BLOCK_NOTE_BLOCK_BELL, 1, 1);
-				ItemStack book = InventoryLibrary.getDefaultBook();
-				player.getInventory().addItem(book);
+				//ItemStack book = InventoryLibrary.getDefaultBook();
+				//player.getInventory().addItem(book);
 				PotionEffect e = new PotionEffect(PotionEffectType.SATURATION, 6000, 255);
 				player.addPotionEffect(e);
 				player.sendMessage(ChatColor.GREEN + "Welcome to the SMP. You've received " + ChatColor.DARK_GREEN
@@ -209,7 +220,6 @@ public class TeleportLibrary {
 				sender.sendMessage(ChatColor.RED + "Failed to teleport to the SMP. Are you riding an entity?");
 				return true;
 			}
-			plugin.nametagAPI.clearNametag(player);
 			// SMP Effects
 			String effects = EffectLibrary.potionsToString(player.getActivePotionEffects());
 			if (effects != null) {
@@ -233,16 +243,20 @@ public class TeleportLibrary {
 
 			// SMP XP
 			survival.set(player.getUniqueId() + ".Experience","" + player.getExp());
+			survival.set(player.getUniqueId() + ".Level","" + player.getLevel());
 			// SMP Health/Hunger
 			survival.set(player.getUniqueId() + ".Health", player.getHealth());
 			survival.set(player.getUniqueId() + ".Hunger", player.getFoodLevel());
 			// Username
 			survival.set(player.getUniqueId() + ".User", sender.getName());
+			//Absorption
+			survival.set(player.getUniqueId() + ".Absorption", player.getAbsorptionAmount());
+			
 			// SMP Location
 			survival.set(player.getUniqueId() + ".Location", LocationLibrary.toString(player.getLocation()));
 			// SMP Bed/Respawn Location
-			if (player.getBedSpawnLocation() != null) {
-				survival.set(player.getUniqueId() + ".Spawn", LocationLibrary.toString(player.getBedSpawnLocation()));
+			if (player.getRespawnLocation() != null) {
+				survival.set(player.getUniqueId() + ".Spawn", LocationLibrary.toString(player.getRespawnLocation()));
 			} else {
 				survival.set(player.getUniqueId() + ".Spawn", "Survival1•175•65•13");
 			}
@@ -258,13 +272,13 @@ public class TeleportLibrary {
 				}
 			}
 			if (creative.getString(player.getUniqueId() + ".Spawn") == null) {
-				player.setBedSpawnLocation(LocationLibrary.toLocation("Main1•133•67•351"));
+				player.setRespawnLocation(LocationLibrary.toLocation("Main1•133•67•351"), true);
 			} else {
 				String loc = creative.getString(player.getUniqueId() + ".Spawn");
 				if (loc.startsWith("Main1")) {
-					player.setBedSpawnLocation(LocationLibrary.toLocation(loc));
+					player.setRespawnLocation(LocationLibrary.toLocation(loc), true);
 				} else {
-					player.setBedSpawnLocation(LocationLibrary.toLocation("Main1•133•67•351"));
+					player.setRespawnLocation(LocationLibrary.toLocation("Main1•133•67•351"), true);
 				}
 			}
 
@@ -302,6 +316,7 @@ public class TeleportLibrary {
 			player.setFlying(true);
 			// Clears inventory
 			player.getInventory().clear();
+			player.getEnderChest().clear();
 			// CMP Health/Hunger
 			if (creative.getInt(player.getUniqueId() + ".Health") > 0.1) {
 				player.setHealth(creative.getInt(player.getUniqueId() + ".Health"));

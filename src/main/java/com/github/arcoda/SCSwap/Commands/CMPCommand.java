@@ -23,8 +23,8 @@ public class CMPCommand implements CommandExecutor {
         	sender.sendMessage(ChatColor.RED + "You can't run this command while in SMP Staff Mode.");
         	return true;
         }
-        if(p.getHealth() < 8.0f) {
-        	sender.sendMessage(ChatColor.RED + "You can't run to the CMP like that. Please try again when you have more health (4+ hearts).");
+        if(p.getHealth() < 12.0f && p.getFoodLevel() < 18) {
+        	sender.sendMessage(ChatColor.RED + "You can't run to the CMP like that. Please try again when you have more health.");
         	return true;
         }
         try {

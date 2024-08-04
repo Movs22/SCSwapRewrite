@@ -14,7 +14,7 @@ public class LeaveListener implements Listener {
     private static SCSwap plugin = SCSwap.getInstance();
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        if (plugin.smpWorlds.contains(event.getPlayer().getWorld())) {
+        if (event.getPlayer().getWorld().getName().startsWith("Survival")) {
         	event.setQuitMessage(""); //to avoid any conflicts with Essentials, we remove the join message and send a "fake" join message using .broadcastMessage
         	for (Player p : Bukkit.getOnlinePlayers()) {
         	    p.sendMessage(ChatColor.DARK_GREEN + event.getPlayer().getName() + ChatColor.YELLOW + " left the game.");

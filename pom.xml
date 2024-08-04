@@ -6,7 +6,7 @@
 
 	<groupId>SCSwap</groupId>
 	<artifactId>SCSwap</artifactId>
-	<version>2.0.0</version>
+	<version>2.1.0</version>
 	<packaging>jar</packaging>
 
 	<name>SCSwap</name>
@@ -40,6 +40,10 @@
 			<url>https://jitpack.io</url>
 		</repository>
 		<repository>
+			<id>nametagedit</id>
+			<url>https://ci.nametagedit.com/plugin/repository/everything/</url>
+		</repository>
+		<repository>
 			<id>spigot-repo</id>
 			<url>https://hub.spigotmc.org/nexus/content/repositories/public/</url>
 		</repository>
@@ -53,7 +57,7 @@
 			<dependency>
 				<groupId>org.spigotmc</groupId>
 				<artifactId>spigot-api</artifactId>
-				<version>1.19.4-R0.1-SNAPSHOT</version>
+				<version>1.21-R0.1-SNAPSHOT</version>
 				<scope>provided</scope>
 			</dependency>
 			<dependency>
@@ -72,12 +76,6 @@
 				<groupId>net.luckperms</groupId>
 				<artifactId>api</artifactId>
 				<version>5.4</version>
-				<scope>provided</scope>
-			</dependency>
-			<dependency>
-				<groupId>com.github.sgtcaze</groupId>
-				<artifactId>NametagEdit</artifactId>
-				<version>3e23db4ae1</version>
 				<scope>provided</scope>
 			</dependency>
 		</dependencies>
